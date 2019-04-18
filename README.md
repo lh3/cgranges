@@ -34,20 +34,23 @@ into memory. Time2/Mem2 indexes the RNA-mapping BED into memory.
 |bedcov-cr    |cgranges        |10.6s |19.1Mb  |5.3s  |153.9Mb  |
 |bedcov-iitree|cpp/IITree.h    |13.4s |22.4Mb  |7.1s  |179.7Mb  |
 |bedcov-itree |IntervalTree.h  |19.2s |26.8Mb  |11.4s |209.7Mb  |
-|bedcov-ncls  |python ncls     |69.6s |209.6Mb |55.0s |1626.3Mb |
 |bedcov-qs    |python quicksect|61.5s |220.6Mb |188.0s|1802.2Mb |
+|bedcov-ncls  |python ncls     |69.6s |209.6Mb |55.0s |1626.3Mb |
 |bedtools     |                |232.8s|478.9Mb |173.8s|3821.0Mb |
 
-Here, [bedcov-cr](test/bedcov-cr.c) and [bedcov-iitree](test/bedcov-iitree.cpp) implement the same core algorithm, but
-but the latter is less careful about memory. The comparison between them shows
-how much extra code affects performance. [bedcov-iitree](test/bedcov-iitree.cpp) and [bedcov-itree](test/bedcov-itree.cpp) has
-similar object structures, but the latter uses a more standard implementation
-of interval trees. The comparison between them shows the effect of the core
-interval tree implementations. [bedcov-qs](test/bedcov-qs.py) is probably the only implementation here
-that builds the interval tree dynamically. This slows down indexing at a cost.
-Bedtools is designed for a variety of other tasks and may include extra
-information in its internal data structures. This micro-benchmark may be unfair
-to bedtools.
+Here, [bedcov-cr](test/bedcov-cr.c) and [bedcov-iitree](test/bedcov-iitree.cpp)
+implement the same core algorithm, but but the latter is less careful about
+memory management and memory locality. The comparison between them shows how
+much extra code affects performance. [bedcov-iitree](test/bedcov-iitree.cpp)
+and [bedcov-itree](test/bedcov-itree.cpp) have similar object structures, but
+the latter uses a more standard implementation of [centered interval
+trees][citree]. The comparison between them shows the effect of the core
+interval tree algorithms. [bedcov-qs](test/bedcov-qs.py) is probably the only
+implementation here that builds the interval tree dynamically. This slows down
+indexing at a cost. [bedcov-ncls](test/bedcov-ncls.py) is the only one based
+nest containment lists. Bedtools is designed for a variety of other tasks and
+may include extra information in its internal data structures. This
+micro-benchmark may be unfair to bedtools.
 
 ### Use cgranges as a C library
 
@@ -85,3 +88,4 @@ for (size_t i = 0; i < a.size(); ++i)
 [ekg-itree]: https://github.com/ekg/intervaltree
 [quicksect]: https://github.com/brentp/quicksect
 [ncls]: https://github.com/hunt-genes/ncls
+[citree]: https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree
