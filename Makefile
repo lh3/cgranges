@@ -34,6 +34,6 @@ depend:
 
 # DO NOT DELETE
 
-cgranges.o: cgranges.h khash.h ksort.h
+cgranges.o: cgranges.h khash.h
 examples/bedcov.o: cgranges.h examples/kseq.h
 examples/example.o: cgranges.h
