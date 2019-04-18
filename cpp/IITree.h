@@ -73,5 +73,8 @@ public:
 			}
 		}
 	}
-	const Interval &operator[](size_t i) const { return a[i]; }
+	size_t size(void) const { return a.size(); }
+	const S &start(size_t i) const { return a[i].st; }
+	const S &end(size_t i) const { return a[i].en; }
+	const T &data(size_t i) const { return a[i].data; }
 };

@@ -11,6 +11,6 @@ int main(void)
 	std::vector<size_t> a;
 	tree.overlap(22, 25, a);
 	for (size_t i = 0; i < a.size(); ++i)
-		printf("%d\t%d\t%d\n", tree[a[i]].st, tree[a[i]].en, tree[a[i]].data);
+		printf("%d\t%d\t%d\n", tree.start(a[i]), tree.end(a[i]), tree.data(a[i]));
 	return 0;
 }
