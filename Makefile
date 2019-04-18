@@ -33,3 +33,7 @@ depend:
 		(LC_ALL=C; export LC_ALL; makedepend -Y -- $(CFLAGS) $(CPPFLAGS) -- *.c examples/*.c)
 
 # DO NOT DELETE
+
+cgranges.o: cgranges.h khash.h ksort.h
+examples/bedcov.o: cgranges.h examples/kseq.h
+examples/example.o: cgranges.h

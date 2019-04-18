@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <assert.h>
 #include "cgranges.h"
-#include "ketopt.h"
 #include "kseq.h"
 KSTREAM_INIT(gzFile, gzread, 0x10000)
 
@@ -50,26 +49,22 @@ cgranges_t *read_bed(const char *fn)
 
 int main(int argc, char *argv[])
 {
-	ketopt_t o = KETOPT_INIT;
-	int c;
 	cgranges_t *cr;
 	gzFile fp;
 	kstream_t *ks;
 	kstring_t str = {0,0,0};
 	int64_t m_b = 0, *b = 0, n_b;
 
-	while ((c = ketopt(&o, argc, argv, 1, "", 0)) >= 0) {
-	}
-	if (argc - o.ind < 2) {
+	if (argc < 3) {
 		printf("Usage: bedcov <loaded.bed> <streamed.bed>\n");
 		return 0;
 	}
 
-	cr = read_bed(argv[o.ind]);
+	cr = read_bed(argv[1]);
 	assert(cr);
 	cr_index(cr);
 
-	fp = gzopen(argv[o.ind+1], "r");
+	fp = gzopen(argv[2], "r");
 	assert(fp);
 	ks = ks_init(fp);
 	while (ks_getuntil(ks, KS_SEP_LINE, &str, 0) >= 0) {
