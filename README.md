@@ -6,7 +6,7 @@ overlaps *r*. Although this library is based on [interval tree][itree], a well
 known data structure, the core algorithm of cgranges is distinct from all
 existing implementations to the best of our knowledge.  Specifically, the
 interval tree in cgranges is implicitly encoded as a plain sorted array
-(similar to [binary heap][bheap] but with a different packing order). Tree
+(similar to [binary heap][bheap] but packed differently). Tree
 traversal is achieved by jumping between array indices. This treatment makes
 cgranges very efficient and compact in memory. The core algorithm can be
 implemented in ~50 lines of C++ code, much shorter than others as well. Please
@@ -14,7 +14,7 @@ see the code comments in [cpp/IITree.h](cpp/IITree.h) for details.
 
 ## Usage
 
-### Test with BED coveragae
+### Test with BED coverage
 
 For testing purposes, this repo implements the [bedtools coverage][bedcov] tool
 with cgranges. The source code is located in the [test/](test) directory. You
@@ -24,8 +24,8 @@ cd test && make
 ./bedcov-cr test1.bed test2.bed
 ```
 The first BED file is loaded into RAM and indexed. The depth and the breadth of
-coverage of each region in the second file is computed by query the index of
-the first file.
+coverage of each region in the second file is computed by query against the
+index of the first file.
 
 The [test/](test) directory also contains a few other implementations based on
 [IntervalTree.h][ekg-itree] in C++, [quicksect][quicksect] in Cython and
@@ -70,7 +70,7 @@ cr_index(cr); // index
 int64_t i, n, *b = 0, max_b = 0;
 n = cr_overlap(cr, "chr1", 15, 22, &b, &max_b); // overlap query; output array b[] can be reused
 for (i = 0; i < n; ++i) // traverse overlapping intervals
-printf("%d\t%d\t%d\n", cr_start(cr, b[i]), cr_end(cr, b[i]), cr_label(cr, b[i]));
+	printf("%d\t%d\t%d\n", cr_start(cr, b[i]), cr_end(cr, b[i]), cr_label(cr, b[i]));
 free(b); // b[] is allocated by malloc() inside cr_overlap(), so needs to be freed with free()
 
 cr_destroy(cr);
