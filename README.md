@@ -38,13 +38,16 @@ into memory. Time2/Mem2 indexes the RNA-mapping BED into memory.
 |bedcov-qs    |python quicksect|61.5s |220.6Mb |188.0s|1802.2Mb |
 |bedtools     |                |232.8s|478.9Mb |173.8s|3821.0Mb |
 
-Here, bedcov-cr and bedcov-iitree implement the same core algorithm, but
+Here, [bedcov-cr](test/bedcov-cr.c) and [bedcov-iitree](test/bedcov-iitree.cpp) implement the same core algorithm, but
 but the latter is less careful about memory. The comparison between them shows
-how much extra code affects performance. bedcov-iitree and bedcov-itree has
+how much extra code affects performance. [bedcov-iitree](test/bedcov-iitree.cpp) and [bedcov-itree](test/bedcov-itree.cpp) has
 similar object structures, but the latter uses a more standard implementation
 of interval trees. The comparison between them shows the effect of the core
-interval tree implementations. bedcov-qs is probably the only implementation
+interval tree implementations. [bedcov-qs](test/bedcov-qs.py) is probably the only implementation here
 that builds the interval tree dynamically. This slows down indexing at a cost.
+Bedtools is designed for a variety of other tasks and may include extra
+information in its internal data structures. This micro-benchmark may be unfair
+to bedtools.
 
 ### Use cgranges as a C library
 
