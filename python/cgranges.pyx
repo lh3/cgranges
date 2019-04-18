@@ -47,3 +47,24 @@ cdef class cgranges:
 		for i in range(n):
 			yield cr_start(self.cr, b[i]), cr_end(self.cr, b[i]), cr_label(self.cr, b[i])
 		free(b)
+
+	def coverage(self, ctg, st, en):
+		cdef int64_t *b = NULL
+		cdef int64_t m_b = 0
+		cdef int64_t n
+		cdef int32_t cov, cov_st, cov_en, cnt
+		if not self.indexed: return None
+		cov, cov_st, cov_en = 0, 0, 0
+		n = cr_overlap(self.cr, str.encode(ctg), st, en, &b, &m_b)
+		for i in range(n):
+			st0, en0 = cr_start(self.cr, b[i]), cr_end(self.cr, b[i])
+			if st0 < st: st0 = st
+			if en0 > en: en0 = en
+			if st0 > cov_en:
+				cov += cov_en - cov_st
+				cov_st, cov_en = st0, en0
+			else:
+				if cov_en < en0: cov_en = en0
+		cov += cov_en - cov_st
+		free(b)
+		return cov, n
