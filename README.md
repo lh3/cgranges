@@ -10,7 +10,7 @@ interval tree in cgranges is implicitly encoded as a plain sorted array
 traversal is achieved by jumping between array indices. This treatment makes
 cgranges very efficient and compact in memory. The core algorithm can be
 implemented in ~50 lines of C++ code, much shorter than others as well. Please
-see code comments in [cpp/IITree.h](cpp.IITree.h) for details.
+see the code comments in [cpp/IITree.h](cpp/IITree.h) for details.
 
 ## Usage
 
