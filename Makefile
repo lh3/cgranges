@@ -12,10 +12,18 @@ endif
 .c.o:
 		$(CC) -c $(CFLAGS) $< -o $@
 
+all:bedcov examples/example
+
 bedcov:cgranges.o examples/bedcov.o
 		$(CC) -o $@ $^ $(LIBS)
 
+examples/example:cgranges.o examples/example.o
+		$(CC) -o $@ $^ $(LIBS)
+
 examples/bedcov.o:examples/bedcov.c
+		$(CC) -c $(CFLAGS) -I. -Iexamples $< -o $@
+
+examples/example.o:examples/example.c
 		$(CC) -c $(CFLAGS) -I. -Iexamples $< -o $@
 
 clean:

@@ -56,6 +56,9 @@ extern "C" {
 // retrieve start and end positions from a cr_intv_t object
 static inline int32_t cr_st(const cr_intv_t *r) { return (int32_t)(r->x>>32); }
 static inline int32_t cr_en(const cr_intv_t *r) { return (int32_t)r->x; }
+static inline int32_t cr_start(const cgranges_t *cr, int64_t i) { return cr_st(&cr->r[i]); }
+static inline int32_t cr_end(const cgranges_t *cr, int64_t i) { return cr_en(&cr->r[i]); }
+static inline int32_t cr_label(const cgranges_t *cr, int64_t i) { return cr->r[i].label; }
 
 // Initialize
 cgranges_t *cr_init(void);
@@ -64,7 +67,7 @@ cgranges_t *cr_init(void);
 void cr_destroy(cgranges_t *cr);
 
 // Add an interval
-cr_intv_t *cr_add_intv(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32_t label_int);
+cr_intv_t *cr_add(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32_t label_int);
 
 // Sort and index intervals
 void cr_index(cgranges_t *cr);

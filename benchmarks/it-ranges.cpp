@@ -82,7 +82,7 @@ int32_t cr_get_ctg(const cgranges_t *cr, const char *ctg)
 	return k == kh_end(h)? -1 : kh_val(h, k);
 }
 
-cr_intv_t *cr_add_intv(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32_t label_int)
+cr_intv_t *cr_add(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32_t label_int)
 {
 	cr_intv_t *p;
 	int32_t k;

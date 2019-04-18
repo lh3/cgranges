@@ -40,7 +40,7 @@ cgranges_t *read_bed(const char *fn)
 		char *ctg;
 		int32_t st, en;
 		ctg = parse_bed(str.s, &st, &en);
-		if (ctg) cr_add_intv(cr, ctg, st, en, k++);
+		if (ctg) cr_add(cr, ctg, st, en, k++);
 	}
 	free(str.s);
 	ks_destroy(ks);
