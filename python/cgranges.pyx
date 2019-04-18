@@ -29,7 +29,7 @@ cdef class cgranges:
 	def __dealloc__(self):
 		cr_destroy(self.cr)
 
-	def add(self, ctg, st, en, label):
+	def add(self, ctg, st, en, label=-1):
 		if not self.indexed:
 			cr_add(self.cr, str.encode(ctg), st, en, label)
 
