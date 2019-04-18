@@ -23,7 +23,28 @@ the first file.
 
 The [test/](test) directory also contains a few other implementations based on
 [IntervalTree.h][ekg-itree] in C++, [quicksect][quicksect] in Cython and
-[ncls][ncls] in Cython.
+[ncls][ncls] in Cython. The table below shows timing and peak memory on two
+test BEDs available in the release page. The first BED contains GenCode
+annotations with ~1.2 million lines, mixing all types of features. The second
+contains ~10 million direct-RNA mappings. Time1/Mem1 indexes the GenCode BED
+into memory. Time2/Mem2 indexes the RNA-mapping BED into memory.
+
+|Program      |Description     |Time1 |Mem1    |Time2 |Mem2     |
+|:------------|:---------------|-----:|-------:|-----:|--------:|
+|bedcov-cr    |cgranges        |10.6s |19.1Mb  |5.3s  |153.9Mb  |
+|bedcov-iitree|cpp/IITree.h    |13.4s |22.4Mb  |7.1s  |179.7Mb  |
+|bedcov-itree |IntervalTree.h  |19.2s |26.8Mb  |11.4s |209.7Mb  |
+|bedcov-ncls  |python ncls     |69.6s |209.6Mb |55.0s |1626.3Mb |
+|bedcov-qs    |python quicksect|61.5s |220.6Mb |188.0s|1802.2Mb |
+|bedtools     |                |232.8s|478.9Mb |173.8s|3821.0Mb |
+
+Here, bedcov-cr and bedcov-iitree implement the same core algorithm, but
+but the latter is less careful about memory. The comparison between them shows
+how much extra code affects performance. bedcov-iitree and bedcov-itree has
+similar object structures, but the latter uses a more standard implementation
+of interval trees. The comparison between them shows the effect of the core
+interval tree implementations. bedcov-qs is probably the only implementation
+that builds the interval tree dynamically. This slows down indexing at a cost.
 
 ### Use cgranges as a C library
 
