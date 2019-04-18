@@ -2,9 +2,15 @@
 
 cgranges is a small C library for genomic interval overlap queries: given a
 genomic region *r* and a set of regions *R*, finding all regions in *R* that
-overlaps *r*. cgranges implements an implicit interval tree. In comparison to
-other implementations, it runs faster, has a lower memory footprint and takes
-less code.
+overlaps *r*. Although this library is based on [interval tree][itree], a well
+known data structure, the core algorithm of cgranges is distinct from all
+existing implementations to the best of our knowledge.  Specifically, the
+interval tree in cgranges is implicitly encoded as a plain sorted array
+(similar to [binary heap][bheap] but with a different packing order). Tree
+traversal is achieved by jumping between array indices. This treatment makes
+cgranges very efficient and compact in memory. The core algorithm can be
+implemented in ~50 lines of C++ code, much shorter than others as well. Please
+see code comments in [cpp/IITree.h](cpp.IITree.h) for details.
 
 ## Usage
 
@@ -89,3 +95,5 @@ for (size_t i = 0; i < a.size(); ++i)
 [quicksect]: https://github.com/brentp/quicksect
 [ncls]: https://github.com/hunt-genes/ncls
 [citree]: https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree
+[itree]: https://en.wikipedia.org/wiki/Interval_tree
+[bheap]: https://en.wikipedia.org/wiki/Binary_heap
