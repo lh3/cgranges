@@ -32,7 +32,6 @@ typedef struct {    // a contig
 	int32_t len;    // max length seen in data
 	int32_t root_k;
 	int64_t n, off; // sum of lengths of previous contigs
-	void *ptr;      // not used
 } cr_ctg_t;
 
 typedef struct {    // an interval

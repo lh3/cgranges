@@ -206,21 +206,23 @@ public:
         visit_near(start, stop, filterF);
     }
 
-    interval_vector findOverlapping(const Scalar& start, const Scalar& stop) const {
+    interval_vector findOverlapping(const Scalar& start, const Scalar& stop, bool sort = false) const {
         interval_vector result;
         visit_overlapping(start, stop,
                           [&](const interval& interval) { 
                             result.emplace_back(interval); 
                           });
+		if (sort) std::sort(result.begin(), result.end(), IntervalStartCmp());
         return result;
     }
 
-    interval_vector findContained(const Scalar& start, const Scalar& stop) const {
+    interval_vector findContained(const Scalar& start, const Scalar& stop, bool sort = false) const {
         interval_vector result;
         visit_contained(start, stop,
                         [&](const interval& interval) { 
                           result.push_back(interval); 
                         });
+		if (sort) std::sort(result.begin(), result.end(), IntervalStartCmp());
         return result;
     }
     bool empty() const {
