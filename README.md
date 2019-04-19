@@ -33,13 +33,15 @@ The [test/](test) directory also contains a few other implementations based on
 test BEDs available in the release page. The first BED contains GenCode
 annotations with ~1.2 million lines, mixing all types of features. The second
 contains ~10 million direct-RNA mappings. Time1/Mem1 indexes the GenCode BED
-into memory. Time2/Mem2 indexes the RNA-mapping BED into memory.
+into memory. Time2/Mem2 indexes the RNA-mapping BED into memory. Python
+implementations only count overlapping regions, but do not compute coverage.
 
 |Program      |Description     |Time1 |Mem1    |Time2 |Mem2     |
 |:------------|:---------------|-----:|-------:|-----:|--------:|
 |bedcov-cr    |cgranges        |10.6s |19.1Mb  |5.3s  |153.9Mb  |
 |bedcov-iitree|cpp/IITree.h    |13.4s |22.4Mb  |7.1s  |179.7Mb  |
 |bedcov-itree |IntervalTree.h  |19.2s |26.8Mb  |11.4s |209.7Mb  |
+|bedcov-cr.py |python cgranges |62.8s |23.4Mb  |47.8s |158.4Mb  |
 |bedcov-qs    |python quicksect|61.5s |220.6Mb |188.0s|1802.2Mb |
 |bedcov-ncls  |python ncls     |69.6s |209.6Mb |55.0s |1626.3Mb |
 |bedtools     |                |232.8s|478.9Mb |173.8s|3821.0Mb |
@@ -51,7 +53,10 @@ much extra code affects performance. [bedcov-iitree](test/bedcov-iitree.cpp)
 and [bedcov-itree](test/bedcov-itree.cpp) have similar object structures, but
 the latter uses a more standard implementation of [centered interval
 trees][citree]. The comparison between them shows the effect of the core
-interval tree algorithms. [bedcov-qs](test/bedcov-qs.py) is probably the only
+interval tree algorithms. [bedcov-cr.py](test/bedcov-cr.py) uses much less
+memory in comparison to other python implementations, but it is not faster.
+Cython imposes significant overhead. [bedcov-qs](test/bedcov-qs.py) is
+probably the only
 implementation here that builds the interval tree dynamically. This slows down
 indexing at a cost. [bedcov-ncls](test/bedcov-ncls.py) is the only one based
 nest containment lists. Bedtools is designed for a variety of other tasks and
