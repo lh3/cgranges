@@ -247,11 +247,11 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	p->k = c->root_k, p->x = (1LL<<p->k) - 1, p->w = 0; // push the root into the stack
 	while (t) { // stack is not empyt
 		istack_t z = stack[--t];
-		if (z.k <= 2) { // the subtree is no larger than (1<<(z.k+1))-1; do a linear scan
+		if (z.k <= 3) { // the subtree is no larger than (1<<(z.k+1))-1; do a linear scan
 			int64_t i, i0 = z.x >> z.k << z.k, i1 = i0 + (1LL<<(z.k+1)) - 1;
 			if (i1 >= c->n) i1 = c->n;
-			for (i = i0; i < i1; ++i)
-				if (cr_st(&r[i]) < en && st < cr_en(&r[i])) {
+			for (i = i0; i < i1 && cr_st(&r[i]) < en; ++i)
+				if (st < cr_en(&r[i])) {
 					if (n == m_b) EXPAND(b, m_b);
 					b[n++] = c->off + i;
 				}
