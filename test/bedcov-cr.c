@@ -1,6 +1,7 @@
 #include <zlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <getopt.h>
 #include "cgranges.h"
 #include "kseq.h"
 KSTREAM_INIT(gzFile, gzread, 0x10000)
@@ -54,17 +55,21 @@ int main(int argc, char *argv[])
 	kstream_t *ks;
 	kstring_t str = {0,0,0};
 	int64_t m_b = 0, *b = 0, n_b;
+	int c, cnt_only = 0;
 
-	if (argc < 3) {
+	while ((c = getopt(argc, argv, "c")) >= 0)
+		cnt_only = 1;
+
+	if (argc - optind < 2) {
 		printf("Usage: bedcov <loaded.bed> <streamed.bed>\n");
 		return 0;
 	}
 
-	cr = read_bed(argv[1]);
+	cr = read_bed(argv[optind]);
 	assert(cr);
 	cr_index(cr);
 
-	fp = gzopen(argv[2], "r");
+	fp = gzopen(argv[optind + 1], "r");
 	assert(fp);
 	ks = ks_init(fp);
 	while (ks_getuntil(ks, KS_SEP_LINE, &str, 0) >= 0) {
@@ -74,19 +79,21 @@ int main(int argc, char *argv[])
 		ctg = parse_bed(str.s, &st1, &en1);
 		if (ctg == 0) continue;
 		n_b = cr_overlap(cr, ctg, st1, en1, &b, &m_b);
-		for (j = 0; j < n_b; ++j) {
-			cr_intv_t *r = &cr->r[b[j]];
-			int32_t st0 = cr_st(r), en0 = cr_en(r);
-			if (st0 < st1) st0 = st1;
-			if (en0 > en1) en0 = en1;
-			if (st0 > cov_en) {
-				cov += cov_en - cov_st;
-				cov_st = st0, cov_en = en0;
-			} else cov_en = cov_en > en0? cov_en : en0;
-			++cnt;
-		}
-		cov += cov_en - cov_st;
-		printf("%s\t%d\t%d\t%ld\t%ld\n", ctg, st1, en1, (long)cnt, (long)cov);
+		if (!cnt_only) {
+			for (j = 0; j < n_b; ++j) {
+				cr_intv_t *r = &cr->r[b[j]];
+				int32_t st0 = cr_st(r), en0 = cr_en(r);
+				if (st0 < st1) st0 = st1;
+				if (en0 > en1) en0 = en1;
+				if (st0 > cov_en) {
+					cov += cov_en - cov_st;
+					cov_st = st0, cov_en = en0;
+				} else cov_en = cov_en > en0? cov_en : en0;
+				++cnt;
+			}
+			cov += cov_en - cov_st;
+			printf("%s\t%d\t%d\t%ld\t%ld\n", ctg, st1, en1, (long)cnt, (long)cov);
+		} else printf("%s\t%d\t%d\t%ld\n", ctg, st1, en1, (long)n_b);
 	}
 	free(b);
 	free(str.s);

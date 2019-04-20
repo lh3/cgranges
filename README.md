@@ -32,36 +32,52 @@ The [test/](test) directory also contains a few other implementations based on
 [ncls][ncls] in Cython. The table below shows timing and peak memory on two
 test BEDs available in the release page. The first BED contains GenCode
 annotations with ~1.2 million lines, mixing all types of features. The second
-contains ~10 million direct-RNA mappings. Time1/Mem1 indexes the GenCode BED
-into memory. Time2/Mem2 indexes the RNA-mapping BED into memory. Python
-implementations only count overlapping regions, but do not compute coverage.
+contains ~10 million direct-RNA mappings. Time1a/Mem1a indexes the GenCode BED
+into memory. Time1b adds whole chromosome intervals to the GenCode BED when
+indexing. Time2/Mem2 indexes the RNA-mapping BED into memory. Numbers are
+averaged over 5 runs.
 
-|Program      |Description     |Time1 |Mem1    |Time2 |Mem2     |
-|:------------|:---------------|-----:|-------:|-----:|--------:|
-|bedcov-cr    |cgranges        |10.6s |19.1Mb  |5.3s  |153.9Mb  |
-|bedcov-iitree|cpp/IITree.h    |13.4s |22.4Mb  |7.1s  |179.7Mb  |
-|bedcov-itree |IntervalTree.h  |19.2s |26.8Mb  |11.4s |209.7Mb  |
-|bedcov-cr.py |python cgranges |62.8s |23.4Mb  |47.8s |158.4Mb  |
-|bedcov-qs    |python quicksect|61.5s |220.6Mb |188.0s|1802.2Mb |
-|bedcov-ncls  |python ncls     |69.6s |209.6Mb |55.0s |1626.3Mb |
-|bedtools     |                |232.8s|478.9Mb |173.8s|3821.0Mb |
+|Algo.   |Lang. |Cov|Program         |Time1a|Time1b|Mem1a   |Time2 |Mem2    |
+|:-------|:-----|:-:|:---------------|-----:|-----:|-------:|-----:|-------:|
+|IAITree |C     |Y  |cgranges        |9.0s  |13.9s |19.1MB  |4.6s  |138.4MB |
+|IAITree |C++   |Y  |cpp/iitree.h    |11.1s |24.5s |22.4MB  |5.8s  |160.4MB |
+|CITree  |C++   |Y  |IntervalTree.h  |17.4s |17.4s |27.2MB  |10.5s |179.5MB |
+|IAITree |C     |N  |cgranges        |7.6s  |13.0s |19.1MB  |4.1s  |138.4MB |
+|AIList  |C     |N  |3rd-party/AIList|7.9s  |8.1s  |14.4MB  |6.5s  |104.8MB |
+|NCList  |C     |N  |3rd-party/NCList|13.0s |13.4s |21.4MB  |10.6s |183.0MB |
+|AITree  |C     |N  |3rd-party/AITree|16.8s |18.4s |73.4MB  |27.3s |546.4MB |
+|IAITree |Cython|N  |cgranges        |56.6s |63.9s |23.4MB  |43.9s |143.1MB |
+|binning |C++   |Y  |bedtools        |201.9s|280.4s|478.5MB |149.1s|3438.1MB|
 
-Here, [bedcov-cr](test/bedcov-cr.c) and [bedcov-iitree](test/bedcov-iitree.cpp)
-implement the same core algorithm, but but the latter is less careful about
-memory management and memory locality. The comparison between them shows how
-much extra code affects performance. [bedcov-iitree](test/bedcov-iitree.cpp)
-and [bedcov-itree](test/bedcov-itree.cpp) have similar object structures, but
-the latter uses a more standard implementation of [centered interval
-trees][citree]. The comparison between them shows the effect of the core
-interval tree algorithms. [bedcov-cr.py](test/bedcov-cr.py) uses much less
-memory in comparison to other python implementations, but it is not faster.
-Cython imposes significant overhead. [bedcov-qs](test/bedcov-qs.py) is
-probably the only
-implementation here that builds the interval tree dynamically. This slows down
-indexing at a cost. [bedcov-ncls](test/bedcov-ncls.py) is the only one based
-nest containment lists. Bedtools is designed for a variety of other tasks and
-may include extra information in its internal data structures. This
-micro-benchmark may be unfair to bedtools.
+Here, IAITree = implicit augmented interval tree, used by cgranges;
+CITree = centered interval tree, used by [Erik Garrison's
+IntervalTree][itree]; AIList = augmented interval list, by [Feng et
+al][ailist]; NCList = nested containment list, taken from [ncls][ncls] by Feng
+et al; AITree = augmented interval tree, from [kerneltree][kerneltree].
+"Cov" indicates whether the program calculates breadth of coverage.
+Comments:
+
+* AIList keeps start and end only. IAITree and CITree addtionally store a
+  4-byte "ID" field per interval to reference the source of interval. This is
+  partly why AIList uses the least memory.
+
+* IAITree is more sensitive to the worse case: the presence of an interval
+  spanning the whole chromosome.
+
+* IAITree uses an efficient radix sort. CITree uses std::sort from STL, which
+  is ok. AIList and NCList use qsort from libc, which is slow. Faster sorting
+  leads to faster indexing.
+
+* IAITree in C++ uses identical core algorithm to the C version, but limited by
+  its APIs, it wastes time on memory locality and management. CITree has a
+  similar issue.
+
+* IAITree+Cython is a wrapper around the C version of cgranges. Cython adds
+  significant overhead.
+
+* Bedtools is designed for a variety of applications in addition to computing
+  coverage. It may keep other information in its internal data structure. This
+  micro-benchmark may be unfair to bedtools.
 
 ### Use cgranges as a C library
 
@@ -102,3 +118,5 @@ for (size_t i = 0; i < a.size(); ++i)
 [citree]: https://en.wikipedia.org/wiki/Interval_tree#Centered_interval_tree
 [itree]: https://en.wikipedia.org/wiki/Interval_tree
 [bheap]: https://en.wikipedia.org/wiki/Binary_heap
+[ailist]: https://www.biorxiv.org/content/10.1101/593657v1
+[kerneltree]: https://github.com/biocore-ntnu/kerneltree

@@ -84,11 +84,11 @@ public:
 		stack[t++] = StackCell(max_level, (1LL<<max_level) - 1, 0); // push the root; this is a top down traversal
 		while (t) { // the following guarantees that numbers in out[] are always sorted
 			StackCell z = stack[--t];
-			if (z.k <= 2) { // we are in a small subtree; traverse every node in this subtree
+			if (z.k <= 3) { // we are in a small subtree; traverse every node in this subtree
 				size_t i, i0 = z.x >> z.k << z.k, i1 = i0 + (1LL<<(z.k+1)) - 1;
 				if (i1 >= a.size()) i1 = a.size();
-				for (i = i0; i < i1; ++i)
-					if (a[i].st < en && st < a[i].en) // if overlap, append to out[]
+				for (i = i0; i < i1 && a[i].st < en; ++i)
+					if (st < a[i].en) // if overlap, append to out[]
 						out.push_back(i);
 			} else if (z.w == 0) { // if left child not processed
 				size_t y = z.x - (1LL<<(z.k-1)); // the left child of z.x; NB: y may be out of range (i.e. y>=a.size())
