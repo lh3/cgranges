@@ -72,12 +72,23 @@ Comments:
   its APIs, it wastes time on memory locality and management. CITree has a
   similar issue.
 
+* Computing coverage is better done when the returned list of intervals are
+  start sorted. IAITree returns sorted list. CITree doesn't. Not sure about
+  others. Computing coverage takes a couple of seconds. Sorting will be slower.
+
+* Printing intervals also takes a noticeable fraction of time. Custom printf
+  equivalent would be faster.
+
 * IAITree+Cython is a wrapper around the C version of cgranges. Cython adds
   significant overhead.
 
 * Bedtools is designed for a variety of applications in addition to computing
   coverage. It may keep other information in its internal data structure. This
   micro-benchmark may be unfair to bedtools.
+
+* In general, the performance is affected a lot by subtle implementation
+  details. CITree, IAITree, NCList and AIList are all broadly comparable in
+  performance. AITree is not recommended when indexed intervals are immutable.
 
 ### Use cgranges as a C library
 
