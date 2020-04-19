@@ -55,13 +55,17 @@ int main(int argc, char *argv[])
 	kstream_t *ks;
 	kstring_t str = {0,0,0};
 	int64_t m_b = 0, *b = 0, n_b;
-	int c, cnt_only = 0;
+	int c, cnt_only = 0, contained = 0;
 
-	while ((c = getopt(argc, argv, "c")) >= 0)
-		cnt_only = 1;
+	while ((c = getopt(argc, argv, "cC")) >= 0)
+		if (c == 'c') cnt_only = 1;
+		else if (c == 'C') contained = 1;
 
 	if (argc - optind < 2) {
-		printf("Usage: bedcov <loaded.bed> <streamed.bed>\n");
+		printf("Usage: bedcov [options] <loaded.bed> <streamed.bed>\n");
+		printf("Options:\n");
+		printf("  -c       only count; no breadth of depth\n");
+		printf("  -C       containment only\n");
 		return 0;
 	}
 
@@ -78,7 +82,10 @@ int main(int argc, char *argv[])
 		int64_t j, cnt = 0, cov = 0, cov_st = 0, cov_en = 0;
 		ctg = parse_bed(str.s, &st1, &en1);
 		if (ctg == 0) continue;
-		n_b = cr_overlap(cr, ctg, st1, en1, &b, &m_b);
+		if (contained)
+			n_b = cr_contain(cr, ctg, st1, en1, &b, &m_b);
+		else
+			n_b = cr_overlap(cr, ctg, st1, en1, &b, &m_b);
 		if (!cnt_only) {
 			for (j = 0; j < n_b; ++j) {
 				cr_intv_t *r = &cr->r[b[j]];

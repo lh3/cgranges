@@ -28,12 +28,11 @@ function it_overlap(a, st, en) {
 	while (stack.length) {
 		var t = stack.pop();
 		var x = t[0], h = t[1], w = t[2];
-		if (h <= 2) {
+		if (h <= 3) {
 			var i0 = x >> h << h, i1 = i0 + (1<<(h+1)) - 1;
 			if (i1 >= a.length) i1 = a.length;
-			for (var i = i0; i < i1; ++i)
-				if (a[i][0] < en && st < a[i][1])
-					b.push(a[i]);
+			for (var i = i0; i < i1 && a[i][0] < en; ++i)
+				if (st < a[i][1]) b.push(a[i]);
 		} else if (w == 0) { // if left child not processed
 			stack.push([x, h, 1]);
 			var y = x - (1<<(h-1));
