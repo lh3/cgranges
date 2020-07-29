@@ -223,8 +223,6 @@ void cr_index_inorder(cgranges_t *cr)
 		cr->ctg[i].root_k = cr_index_inorder1(&cr->r[cr->ctg[i].off], cr->ctg[i].n);
 }
 
-int64_t cr_counter = 0;
-
 /*********************
  * Query for inorder *
  *********************/
@@ -271,7 +269,6 @@ int64_t cr_overlap_inorder_int(const cgranges_t *cr, int32_t ctg_id, int32_t st,
 	p->k = c->root_k, p->x = (1LL<<p->k) - 1, p->w = 0; // push the root into the stack
 	while (t) { // stack is not empyt
 		istack_t z = stack[--t];
-		++cr_counter;
 		if (z.k <= 3) { // the subtree is no larger than (1<<(z.k+1))-1; do a linear scan
 			int64_t i, i0 = z.x >> z.k << z.k, i1 = i0 + (1LL<<(z.k+1)) - 1;
 			if (i1 >= c->n) i1 = c->n;
@@ -395,7 +392,6 @@ int64_t cr_overlap_BFS_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int
 	while (t) {
 		istack2_t z = stack[--t];
 		int64_t l = (z.x<<1) + 1;
-		++cr_counter;
 		if (l >= c->n) { // a leaf node
 			if (st < cr_en(&r[z.x]) && cr_st(&r[z.x]) < en) {
 				if (n == m_b) EXPAND(b, m_b);
