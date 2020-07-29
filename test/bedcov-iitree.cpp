@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#ifdef _USE_BFS
+#include "IITreeBFS.h"
+#else
 #include "IITree.h"
+#endif
 #include "khash.h"
 #include "kseq.h"
 KSTREAM_INIT(gzFile, gzread, 0x10000)
