@@ -105,7 +105,6 @@ int main(int argc, char *argv[])
 			printf("%s\t%d\t%d\t%ld\t%ld\n", ctg, st1, en1, (long)cnt, (long)cov);
 		} else printf("%s\t%d\t%d\t%ld\n", ctg, st1, en1, (long)n_b);
 	}
-	fprintf(stderr, "%lld\n", cr_counter);
 	free(b);
 	free(str.s);
 	ks_destroy(ks);
