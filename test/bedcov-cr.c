@@ -55,23 +55,26 @@ int main(int argc, char *argv[])
 	kstream_t *ks;
 	kstring_t str = {0,0,0};
 	int64_t m_b = 0, *b = 0, n_b;
-	int c, cnt_only = 0, contained = 0;
+	int c, cnt_only = 0, contained = 0, is_BFS = 0;
 
-	while ((c = getopt(argc, argv, "cC")) >= 0)
+	while ((c = getopt(argc, argv, "bcC")) >= 0)
 		if (c == 'c') cnt_only = 1;
 		else if (c == 'C') contained = 1;
+		else if (c == 'b') is_BFS = 1;
 
 	if (argc - optind < 2) {
 		printf("Usage: bedcov [options] <loaded.bed> <streamed.bed>\n");
 		printf("Options:\n");
 		printf("  -c       only count; no breadth of depth\n");
 		printf("  -C       containment only\n");
+		printf("  -b       use the BFS layout\n");
 		return 0;
 	}
 
 	cr = read_bed(argv[optind]);
 	assert(cr);
-	cr_index(cr);
+	if (contained) is_BFS = 0;
+	cr_index2(cr, is_BFS);
 
 	fp = gzopen(argv[optind + 1], "r");
 	assert(fp);
@@ -102,6 +105,7 @@ int main(int argc, char *argv[])
 			printf("%s\t%d\t%d\t%ld\t%ld\n", ctg, st1, en1, (long)cnt, (long)cov);
 		} else printf("%s\t%d\t%d\t%ld\n", ctg, st1, en1, (long)n_b);
 	}
+	fprintf(stderr, "%lld\n", cr_counter);
 	free(b);
 	free(str.s);
 	ks_destroy(ks);

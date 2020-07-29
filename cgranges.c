@@ -169,10 +169,6 @@ int32_t cr_is_sorted(const cgranges_t *cr)
 	return (i == cr->n_r);
 }
 
-/************
- * Indexing *
- ************/
-
 void cr_index_prepare(cgranges_t *cr)
 {
 	int64_t i, st;
@@ -192,7 +188,11 @@ void cr_index_prepare(cgranges_t *cr)
 	}
 }
 
-int32_t cr_index1(cr_intv_t *a, int64_t n)
+/*************************
+ * Indexing for in-order *
+ *************************/
+
+int32_t cr_index_inorder1(cr_intv_t *a, int64_t n)
 {
 	int64_t i, last_i;
 	int32_t last, k;
@@ -215,17 +215,19 @@ int32_t cr_index1(cr_intv_t *a, int64_t n)
 	return k - 1;
 }
 
-void cr_index(cgranges_t *cr)
+void cr_index_inorder(cgranges_t *cr)
 {
 	int32_t i;
 	cr_index_prepare(cr);
 	for (i = 0; i < cr->n_ctg; ++i)
-		cr->ctg[i].root_k = cr_index1(&cr->r[cr->ctg[i].off], cr->ctg[i].n);
+		cr->ctg[i].root_k = cr_index_inorder1(&cr->r[cr->ctg[i].off], cr->ctg[i].n);
 }
 
-/*********
- * Query *
- *********/
+int64_t cr_counter = 0;
+
+/*********************
+ * Query for inorder *
+ *********************/
 
 int64_t cr_min_start_int(const cgranges_t *cr, int32_t ctg_id, int32_t st) // find the smallest i such that cr_st(&r[i]) >= st
 {
@@ -233,6 +235,7 @@ int64_t cr_min_start_int(const cgranges_t *cr, int32_t ctg_id, int32_t st) // fi
 	const cr_ctg_t *c;
 	const cr_intv_t *r;
 
+	assert(!cr->is_BFS);
 	if (ctg_id < 0 || ctg_id >= cr->n_ctg) return -1;
 	c = &cr->ctg[ctg_id];
 	r = &cr->r[c->off];
@@ -252,7 +255,7 @@ typedef struct {
 	int32_t k, w;
 } istack_t;
 
-int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
+int64_t cr_overlap_inorder_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
 {
 	int32_t t = 0;
 	const cr_ctg_t *c;
@@ -260,6 +263,7 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	int64_t *b = *b_, m_b = *m_b_, n = 0;
 	istack_t stack[64], *p;
 
+	assert(!cr->is_BFS);
 	if (ctg_id < 0 || ctg_id >= cr->n_ctg) return 0;
 	c = &cr->ctg[ctg_id];
 	r = &cr->r[c->off];
@@ -267,6 +271,7 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	p->k = c->root_k, p->x = (1LL<<p->k) - 1, p->w = 0; // push the root into the stack
 	while (t) { // stack is not empyt
 		istack_t z = stack[--t];
+		++cr_counter;
 		if (z.k <= 3) { // the subtree is no larger than (1<<(z.k+1))-1; do a linear scan
 			int64_t i, i0 = z.x >> z.k << z.k, i1 = i0 + (1LL<<(z.k+1)) - 1;
 			if (i1 >= c->n) i1 = c->n;
@@ -314,17 +319,129 @@ int64_t cr_contain_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	return n;
 }
 
-int64_t cr_min_start(const cgranges_t *cr, const char *ctg, int32_t st)
+/**************
+ * BFS layout *
+ **************/
+
+static int64_t cr_BFS_layout_recur(int64_t n, const cr_intv_t *a, cr_intv_t *b, int64_t i, int64_t k) // see https://algorithmica.org/en/eytzinger
 {
-	return cr_min_start_int(cr, cr_get_ctg(cr, ctg), st);
+	if (k < n) {
+		i = cr_BFS_layout_recur(n, a, b, i, (k<<1) + 1);
+		b[k] = a[i++];
+		i = cr_BFS_layout_recur(n, a, b, i, (k<<1) + 2);
+	}
+	return i;
+}
+
+typedef struct {
+	int64_t x;
+	int32_t w;
+} istack2_t;
+
+void cr_index_BFS1(cr_intv_t *a, int64_t n)
+{
+	int t = 0;
+	istack2_t *p, stack[64];
+	p = &stack[t++], p->x = 0, p->w = 0;
+	while (t) {
+		istack2_t z = stack[--t];
+		int64_t k = z.x, l = k<<1|1, r = l + 1;
+		if (z.w == 2) { // Interval::max for both children are computed
+			a[k].y = cr_en(&a[k]);
+			if (l < n && a[k].y < a[l].y) a[k].y = a[l].y;
+			if (r < n && a[k].y < a[r].y) a[k].y = a[r].y;
+		} else { // go down into the two children
+			p = &stack[t++], p->x = k, p->w = z.w + 1;
+			if (l + z.w < n)
+				p = &stack[t++], p->x = l + z.w, p->w = 0;
+		}
+	}
+}
+
+void cr_index_BFS(cgranges_t *cr)
+{
+	int32_t i;
+	int64_t m = 0;
+	cr_intv_t *b;
+	assert(cr->is_BFS);
+	cr_index_prepare(cr);
+	for (i = 0; i < cr->n_ctg; ++i)
+		m = m > cr->ctg[i].n? m : cr->ctg[i].n;
+	b = CALLOC(cr_intv_t, m);
+	for (i = 0; i < cr->n_ctg; ++i) {
+		cr_intv_t *a = &cr->r[cr->ctg[i].off];
+		int64_t n = cr->ctg[i].n;
+		cr_BFS_layout_recur(n, a, b, 0, 0);
+		memcpy(a, b, n * sizeof(cr_intv_t));
+		cr_index_BFS1(a, n);
+	}
+	free(b);
+}
+
+int64_t cr_overlap_BFS_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
+{
+	int32_t t = 0;
+	const cr_ctg_t *c;
+	const cr_intv_t *r;
+	int64_t *b = *b_, m_b = *m_b_, n = 0;
+	istack2_t stack[64], *p;
+
+	assert(cr->is_BFS);
+	if (ctg_id < 0 || ctg_id >= cr->n_ctg) return 0;
+	c = &cr->ctg[ctg_id];
+	r = &cr->r[c->off];
+
+	p = &stack[t++], p->x = 0, p->w = 0; // push the root into the stack
+	while (t) {
+		istack2_t z = stack[--t];
+		int64_t l = (z.x<<1) + 1;
+		++cr_counter;
+		if (l >= c->n) { // a leaf node
+			if (st < cr_en(&r[z.x]) && cr_st(&r[z.x]) < en) {
+				if (n == m_b) EXPAND(b, m_b);
+				b[n++] = c->off + z.x;
+			}
+		} else if (z.w == 0) {
+			p = &stack[t++], p->x = z.x, p->w = 1;
+			if (l < c->n && r[l].y > st)
+				p = &stack[t++], p->x = l, p->w = 0;
+		} else if (cr_st(&r[z.x]) < en) {
+			if (st < cr_en(&r[z.x])) {
+				if (n == m_b) EXPAND(b, m_b);
+				b[n++] = c->off + z.x;
+			}
+			if (l + 1 < c->n)
+				p = &stack[t++], p->x = l + 1, p->w = 0;
+		}
+	}
+	*b_ = b, *m_b_ = m_b;
+	return n;
+}
+
+/**********************************
+ * APIs for both in-order and BFS *
+ **********************************/
+
+void cr_index2(cgranges_t *cr, int is_BFS)
+{
+	cr->is_BFS = !!is_BFS;
+	if (is_BFS) cr_index_BFS(cr);
+	else cr_index_inorder(cr);
+}
+
+void cr_index(cgranges_t *cr)
+{
+	cr_index2(cr, 0);
 }
 
 int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
 {
-	return cr_overlap_int(cr, cr_get_ctg(cr, ctg), st, en, b_, m_b_);
+	if (cr->is_BFS) return cr_overlap_BFS_int(cr, cr_get_ctg(cr, ctg), st, en, b_, m_b_);
+	else return cr_overlap_inorder_int(cr, cr_get_ctg(cr, ctg), st, en, b_, m_b_);
 }
 
 int64_t cr_contain(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
 {
+	assert(!cr->is_BFS);
 	return cr_contain_int(cr, cr_get_ctg(cr, ctg), st, en, b_, m_b_);
 }

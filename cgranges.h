@@ -43,6 +43,7 @@ typedef struct {    // an interval
 typedef struct {
 	int64_t n_r, m_r;     // number and max number of intervals
 	cr_intv_t *r;         // list of intervals (of size _n_r_)
+	int32_t is_BFS;
 	int32_t n_ctg, m_ctg; // number and max number of contigs
 	cr_ctg_t *ctg;        // list of contigs (of size _n_ctg_)
 	void *hc;             // dictionary for converting contig names to integers
@@ -70,6 +71,7 @@ cr_intv_t *cr_add(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32
 
 // Sort and index intervals
 void cr_index(cgranges_t *cr);
+void cr_index2(cgranges_t *cr, int is_BFS);
 
 int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
 int64_t cr_contain(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
