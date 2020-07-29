@@ -30,18 +30,21 @@ class IITree {
 		}
 		return i;
 	}
-	void index_recur(size_t k = 0) {
-		if (k < a.size()) {
-			size_t l = (k<<1) + 1;
-			a[k].max = a[k].en;
-			if (l < a.size()) {
-				index_recur(l);
-				a[k].max = a[k].max > a[l].max? a[k].max : a[l].max;
-			}
-			++l;
-			if (l < a.size()) {
-				index_recur(l);
-				a[k].max = a[k].max > a[l].max? a[k].max : a[l].max;
+	void index_BFS(Interval *a, size_t n) { // set Interval::max
+		int t = 0;
+		StackCell stack[64];
+		stack[t++] = StackCell(0, 0);
+		while (t) {
+			StackCell z = stack[--t];
+			size_t k = z.x, l = k<<1|1, r = l + 1;
+			if (z.w == 2) { // Interval::max for both children are computed
+				a[k].max = a[k].en;
+				if (l < n && a[k].max < a[l].max) a[k].max = a[l].max;
+				if (r < n && a[k].max < a[r].max) a[k].max = a[r].max;
+			} else { // go down into the two children
+				stack[t++] = StackCell(k, z.w + 1);
+				if (l + z.w < n)
+					stack[t++] = StackCell(l + z.w, 0);
 			}
 		}
 	}
@@ -53,7 +56,7 @@ public:
 		layout_recur(b);
 		std::memcpy(&a[0], b, a.size() * sizeof(Interval));
 		free(b);
-		index_recur();
+		index_BFS(&a[0], a.size());
 	}
 	void overlap(const S &st, const S &en, std::vector<size_t> &out) const {
 		int t = 0;
