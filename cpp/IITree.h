@@ -77,10 +77,11 @@ public:
 		std::sort(a.begin(), a.end(), IntervalLess());
 		max_level = index_core(a);
 	}
-	void overlap(const S &st, const S &en, std::vector<size_t> &out) const {
+	bool overlap(const S &st, const S &en, std::vector<size_t> &out) const {
 		int t = 0;
 		StackCell stack[64];
 		out.clear();
+		if (max_level < 0) return false;
 		stack[t++] = StackCell(max_level, (1LL<<max_level) - 1, 0); // push the root; this is a top down traversal
 		while (t) { // the following guarantees that numbers in out[] are always sorted
 			StackCell z = stack[--t];
@@ -100,6 +101,7 @@ public:
 				stack[t++] = StackCell(z.k - 1, z.x + (1LL<<(z.k-1)), 0); // push the right child
 			}
 		}
+		return out.size() > 0? true : false;
 	}
 	size_t size(void) const { return a.size(); }
 	const S &start(size_t i) const { return a[i].st; }

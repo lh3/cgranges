@@ -58,10 +58,11 @@ public:
 		free(b);
 		index_BFS(&a[0], a.size());
 	}
-	void overlap(const S &st, const S &en, std::vector<size_t> &out) const {
+	bool overlap(const S &st, const S &en, std::vector<size_t> &out) const {
 		int t = 0;
 		StackCell stack[64];
 		out.clear();
+		if (max_level < 0) return false;
 		stack[t++] = StackCell(0, 0); // push the root; this is a top down traversal
 		while (t) { // the following guarantees that numbers in out[] are always sorted
 			StackCell z = stack[--t];
@@ -77,6 +78,7 @@ public:
 				if (r < a.size()) stack[t++] = StackCell(r, 0);
 			}
 		}
+		return out.size() > 0? true : false;
 	}
 	size_t size(void) const { return a.size(); }
 	const S &start(size_t i) const { return a[i].st; }
