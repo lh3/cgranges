@@ -104,6 +104,7 @@ void cr_destroy(cgranges_t *cr)
 		free(cr->ctg[i].name);
 	free(cr->ctg);
 	kh_destroy(str, (strhash_t*)cr->hc);
+	free(cr->r);
 	free(cr);
 }
 
