@@ -21,7 +21,7 @@ sys.path.append('python')
 include_dirs = ["."]
 
 def readme():
-	with open('python/README.rst') as f:
+	with open('python/README.md') as f:
 		return f.read()
 
 setup(
