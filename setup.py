@@ -9,9 +9,9 @@ cmdclass = {}
 try:
 	from Cython.Build import build_ext
 except ImportError: # without Cython
-	module_src = 'python/cgranges.c'
+	sources = ['cgranges.c']
 else: # with Cython
-	module_src = 'python/cgranges.pyx'
+	sources = ['cgranges.c', 'python/cgranges.pyx']
 	cmdclass['build_ext'] = build_ext
 
 import sys, platform
@@ -34,8 +34,8 @@ setup(
 	author_email = 'lh3@me.com',
 	license = 'MIT',
 	keywords = 'interval',
-    ext_modules = [Extension('cgranges',
-		sources = [module_src, 'cgranges.c'],
+	ext_modules = [Extension('cgranges',
+		sources = sources,
 		depends = ['cgranges.h', 'khash.h', 'python/cgranges.pyx'],
 		include_dirs = include_dirs)],
 	classifiers = [
