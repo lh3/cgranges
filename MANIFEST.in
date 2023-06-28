@@ -1,0 +1,1 @@
+include python/cgranges.pyx python/README.rst cgranges.h khash.h
