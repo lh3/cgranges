@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <assert.h>
 #include "cgranges.h"
 #include "khash.h"
@@ -265,7 +266,7 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	r = &cr->r[c->off];
 	p = &stack[t++];
 	p->k = c->root_k, p->x = (1LL<<p->k) - 1, p->w = 0; // push the root into the stack
-	while (t) { // stack is not empyt
+	while (t) { // stack is not empty
 		istack_t z = stack[--t];
 		if (z.k <= 3) { // the subtree is no larger than (1<<(z.k+1))-1; do a linear scan
 			int64_t i, i0 = z.x >> z.k << z.k, i1 = i0 + (1LL<<(z.k+1)) - 1;
@@ -296,6 +297,47 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	return n;
 }
 
+bool cr_overlap_any_bool(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en)
+{
+	int32_t t = 0;
+	const cr_ctg_t *c;
+	const cr_intv_t *r;
+	int64_t n = 0;
+	istack_t stack[64], *p;
+
+	if (ctg_id < 0 || ctg_id >= cr->n_ctg) return false;
+	c = &cr->ctg[ctg_id];
+	r = &cr->r[c->off];
+	p = &stack[t++];
+	p->k = c->root_k, p->x = (1LL<<p->k) - 1, p->w = 0; // push the root into the stack
+	while (t) { // stack is not empty
+		istack_t z = stack[--t];
+		if (z.k <= 3) { // the subtree is no larger than (1<<(z.k+1))-1; do a linear scan
+			int64_t i, i0 = z.x >> z.k << z.k, i1 = i0 + (1LL<<(z.k+1)) - 1;
+			if (i1 >= c->n) i1 = c->n;
+			for (i = i0; i < i1 && cr_st(&r[i]) < en; ++i)
+				if (st < cr_en(&r[i])) {
+					return true;
+				}
+		} else if (z.w == 0) { // if left child not processed
+			int64_t y = z.x - (1LL<<(z.k-1));
+			p = &stack[t++];
+			p->k = z.k, p->x = z.x, p->w = 1;
+			if (y >= c->n || r[y].y > st) {
+				p = &stack[t++];
+				p->k = z.k - 1, p->x = y, p->w = 0; // push the left child to the stack
+			}
+		} else if (z.x < c->n && cr_st(&r[z.x]) < en) {
+			if (st < cr_en(&r[z.x])) { // then z.x overlaps the query; write to the output array
+				return true;
+			}
+			p = &stack[t++];
+			p->k = z.k - 1, p->x = z.x + (1LL<<(z.k-1)), p->w = 0; // push the right child
+		}
+	}
+	return false;
+}
+
 int64_t cr_contain_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
 {
 	int64_t n = 0, i, s, e, *b = *b_, m_b = *m_b_;
@@ -322,6 +364,11 @@ int64_t cr_min_start(const cgranges_t *cr, const char *ctg, int32_t st)
 int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
 {
 	return cr_overlap_int(cr, cr_get_ctg(cr, ctg), st, en, b_, m_b_);
+}
+
+bool cr_overlap_any(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en)
+{
+	return cr_overlap_any_bool(cr, cr_get_ctg(cr, ctg), st, en);
 }
 
 int64_t cr_contain(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
