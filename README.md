@@ -122,6 +122,12 @@ for (size_t i = 0; i < a.size(); ++i)
 	printf("%d\t%d\t%d\n", tree.start(a[i]), tree.end(a[i]), tree.data(a[i]));
 ```
 
+## Cite cgranges
+
+This library is integrated into [bedtk][bedtk], which is published in:
+> Li H and Rong J (2021) Bedtk: finding interval overlap with implicit interval tree.
+> *Bioinformatics*, **37**:1315-1316
+
 [bedcov]: https://bedtools.readthedocs.io/en/latest/content/tools/coverage.html
 [ekg-itree]: https://github.com/ekg/intervaltree
 [quicksect]: https://github.com/brentp/quicksect
@@ -131,3 +137,4 @@ for (size_t i = 0; i < a.size(); ++i)
 [bheap]: https://en.wikipedia.org/wiki/Binary_heap
 [ailist]: https://www.biorxiv.org/content/10.1101/593657v1
 [kerneltree]: https://github.com/biocore-ntnu/kerneltree
+[bedtk]: https://github.com/lh3/bedtk
