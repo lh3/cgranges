@@ -14,6 +14,7 @@ cdef extern from "cgranges.h":
 	cr_intv_t *cr_add(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32_t label_int)
 	void cr_index(cgranges_t *cr)
 	int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
+	bint cr_overlap_any(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en)
 	int32_t cr_start(const cgranges_t *cr, int64_t i)
 	int32_t cr_end(const cgranges_t *cr, int64_t i)
 	int32_t cr_label(const cgranges_t *cr, int64_t i)
@@ -47,6 +48,11 @@ cdef class cgranges:
 		for i in range(n):
 			yield cr_start(self.cr, b[i]), cr_end(self.cr, b[i]), cr_label(self.cr, b[i])
 		free(b)
+	
+	def overlap_any(self, ctg, st, en):
+		cdef int64_t n
+		if not self.indexed: return None
+		return cr_overlap_any(self.cr, str.encode(ctg), st, en)
 
 	def coverage(self, ctg, st, en):
 		cdef int64_t *b = NULL

@@ -26,6 +26,7 @@
 #define CRANGES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct {    // a contig
 	char *name;     // name of the contig
@@ -72,6 +73,7 @@ cr_intv_t *cr_add(cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int32
 void cr_index(cgranges_t *cr);
 
 int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
+bool cr_overlap_any(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en);
 int64_t cr_contain(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
 
 // Add a contig and length. Call this for desired contig ordering. _len_ can be 0.
